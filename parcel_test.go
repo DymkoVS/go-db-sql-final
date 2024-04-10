@@ -43,18 +43,17 @@ func TestAddGetDelete(t *testing.T) {
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 	id, err := store.Add(parcel)
 	require.NoError(t, err)
-	require.NotEmpty(t, id)
 	//	require.NotZero(t, id)
+	require.NotEmpty(t, id)
 
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	row, err := store.Get(id)
 	require.NoError(t, err)
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
-	assert.Equal(t, row.Address, parcel.Address)
-	assert.Equal(t, row.Client, parcel.Client)
-	assert.Equal(t, row.CreatedAt, parcel.CreatedAt)
-	assert.Equal(t, row.Status, parcel.Status)
+	// assert.Equal(t, row, parcel)
+	parcel.Number = row.Number
+	assert.Equal(t, row, parcel)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -62,7 +61,7 @@ func TestAddGetDelete(t *testing.T) {
 	require.NoError(t, err)
 	// проверьте, что посылку больше нельзя получить из БД
 	row, err = store.Get(id)
-	assert.Error(t, err, sql.ErrNoRows)
+	assert.ErrorIs(t, err, sql.ErrNoRows)
 	assert.Empty(t, row)
 
 }
@@ -94,8 +93,7 @@ func TestSetAddress(t *testing.T) {
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	row, err := store.Get(id)
 	require.NoError(t, err)
-	assert.Equal(t, row.Address, newAddress)
-
+	assert.Equal(t, newAddress, row.Address)
 }
 
 // TestSetStatus проверяет обновление статуса
@@ -116,14 +114,14 @@ func TestSetStatus(t *testing.T) {
 
 	// set status
 	// обновите статус, убедитесь в отсутствии ошибки
-	err = store.SetStatus(id, "Delivered")
+	err = store.SetStatus(id, ParcelStatusDelivered)
 	require.NoError(t, err)
 
 	// check
 	// получите добавленную посылку и убедитесь, что статус обновился
 	row, err := store.Get(id)
 	require.NoError(t, err)
-	assert.Equal(t, row.Status, "Delivered")
+	assert.Equal(t, ParcelStatusDelivered, row.Status)
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
